@@ -31,7 +31,7 @@
 static libusb_context *ctx = NULL;          // libusb context
 static libusb_device_handle *dev;           // libusb device
 static struct libusb_transfer *transfer;    // async transfer descriptor
-static unsigned char receive_buf[42];       // receive buffer
+static unsigned char receive_buf[64];       // receive buffer
 static volatile int nbytes_received = 0;    // receive result
 
 #define HID_INTERFACE   0                   // interface index
@@ -134,19 +134,14 @@ again:
 //
 void hid_send_recv(const unsigned char *data, unsigned nbytes, unsigned char *rdata, unsigned rlength)
 {
-    unsigned char buf[42];
-    unsigned char reply[42];
+    unsigned char buf[64];
+    unsigned char reply[64];
     unsigned k;
     int reply_len;
 
     memset(buf, 0, sizeof(buf));
-    buf[0] = 1;
-    buf[1] = 0;
-    buf[2] = nbytes;
-    buf[3] = nbytes >> 8;
     if (nbytes > 0)
-        memcpy(buf+4, data, nbytes);
-    nbytes += 4;
+        memcpy(buf, data, nbytes);
 
     if (trace_flag > 0) {
         fprintf(stderr, "---Send");
@@ -175,16 +170,7 @@ void hid_send_recv(const unsigned char *data, unsigned nbytes, unsigned char *rd
         }
         fprintf(stderr, "\n");
     }
-    if (reply[0] != 3 || reply[1] != 0 || reply[3] != 0) {
-        fprintf(stderr, "incorrect reply\n");
-        exit(-1);
-    }
-    if (reply[2] != rlength) {
-        fprintf(stderr, "incorrect reply length %d, expected %d\n",
-            reply[2], rlength);
-        exit(-1);
-    }
-    memcpy(rdata, reply+4, rlength);
+    memcpy(rdata, reply, rlength);
 }
 
 //

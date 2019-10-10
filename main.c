@@ -76,6 +76,10 @@ static void mcp_disconnect()
 static void mcp_download()
 {
     //TODO
+    unsigned char cmd_61[1] = { 0x61 };
+    unsigned char reply[64];
+
+    hid_send_recv(cmd_61, sizeof(cmd_61), reply, sizeof(cmd_61));
 }
 
 int main(int argc, char **argv)

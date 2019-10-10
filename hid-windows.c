@@ -32,7 +32,7 @@
 #include "util.h"
 
 HANDLE dev = INVALID_HANDLE_VALUE;          // HID device
-static unsigned char receive_buf[42];       // receive buffer
+static unsigned char receive_buf[64];       // receive buffer
 
 //
 // Send a request to the device.
@@ -41,18 +41,13 @@ static unsigned char receive_buf[42];       // receive buffer
 //
 void hid_send_recv(const unsigned char *data, unsigned nbytes, unsigned char *rdata, unsigned rlength)
 {
-    unsigned char buf[42];
+    unsigned char buf[64];
     unsigned k;
     DWORD nbytes_received;
 
     memset(buf, 0, sizeof(buf));
-    buf[0] = 1;
-    buf[1] = 0;
-    buf[2] = nbytes;
-    buf[3] = nbytes >> 8;
     if (nbytes > 0)
-        memcpy(buf+4, data, nbytes);
-    nbytes += 4;
+        memcpy(buf, data, nbytes);
 
     if (trace_flag > 0) {
         fprintf(stderr, "---Send");
@@ -92,16 +87,7 @@ void hid_send_recv(const unsigned char *data, unsigned nbytes, unsigned char *rd
         }
         fprintf(stderr, "\n");
     }
-    if (receive_buf[0] != 3 || receive_buf[1] != 0 || receive_buf[3] != 0) {
-        fprintf(stderr, "incorrect reply\n");
-        exit(-1);
-    }
-    if (receive_buf[2] != rlength) {
-        fprintf(stderr, "incorrect reply length %d, expected %d\n",
-            receive_buf[2], rlength);
-        exit(-1);
-    }
-    memcpy(rdata, receive_buf+4, rlength);
+    memcpy(rdata, receive_buf, rlength);
 }
 
 //
