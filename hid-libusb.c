@@ -30,101 +30,36 @@
 
 static libusb_context *ctx = NULL;          // libusb context
 static libusb_device_handle *dev;           // libusb device
-static struct libusb_transfer *transfer;    // async transfer descriptor
-static unsigned char receive_buf[64];       // receive buffer
-static volatile int nbytes_received = 0;    // receive result
 
-#define HID_INTERFACE   0                   // interface index
-#define TIMEOUT_MSEC    500                 // receive timeout
+#define HID_INTERFACE       2               // HID interface index
+#define TIMEOUT_MSEC        500             // receive timeout
+#define BULK_WRITE_ENDPOINT 0x03            // output to HID device
+#define BULK_READ_ENDPOINT  0x83            // input from HID device
 
 //
-// Callback function for asynchronous receive.
-// Needs to fill the receive_buf and set nbytes_received.
+// Perform USB bulk transfer.
+// Return a number of transferred bytes, or -1 in case of error.
 //
-static void read_callback(struct libusb_transfer *t)
+static int bulk_transfer(uint8_t type, uint8_t *data, int length)
 {
-    switch (t->status) {
-    case LIBUSB_TRANSFER_COMPLETED:
-        //fprintf(stderr, "%s: Transfer complete, %d bytes\n", __func__, t->actual_length);
-        memcpy(receive_buf, t->buffer, t->actual_length);
-        nbytes_received = t->actual_length;
-        break;
+    int result, transfered, retry;
 
-    case LIBUSB_TRANSFER_CANCELLED:
-        //fprintf(stderr, "%s: Transfer cancelled\n", __func__);
-        nbytes_received = LIBUSB_ERROR_INTERRUPTED;
-        return;
+    for (retry = 0; retry < 10; retry++) {
+        result = libusb_bulk_transfer(dev, type, data, length, &transfered, TIMEOUT_MSEC);
+        if (result >= 0)
+            return transfered;
 
-    case LIBUSB_TRANSFER_NO_DEVICE:
-        //fprintf(stderr, "%s: No device\n", __func__);
-        nbytes_received = LIBUSB_ERROR_NO_DEVICE;
-        return;
+        if (result != LIBUSB_ERROR_PIPE)
+            break;
 
-    case LIBUSB_TRANSFER_TIMED_OUT:
-        //fprintf(stderr, "%s: Timeout (normal)\n", __func__);
-        nbytes_received = LIBUSB_ERROR_TIMEOUT;
-        break;
-
-    default:
-        //fprintf(stderr, "%s: Unknown transfer code: %d\n", __func__, t->status);
-        nbytes_received = LIBUSB_ERROR_IO;
-   }
-}
-
-//
-// Write data to the device and receive reply.
-// Return negative status on error.
-// Return received byte count of success.
-// On timeout, repeat the transaction.
-// Need to use callback for receive interrupt transfer.
-//
-static int write_read(const unsigned char *data, unsigned length, unsigned char *reply, unsigned rlength)
-{
-    if (! transfer) {
-        // Allocate transfer descriptor on first invocation.
-        transfer = libusb_alloc_transfer(0);
+        // Sometimes the chip does not recognize the command, for unknown reason.
+        // Need to repeat.
+        usleep(10000);
     }
-    libusb_fill_interrupt_transfer(transfer, dev,
-        LIBUSB_RECIPIENT_INTERFACE|LIBUSB_ENDPOINT_IN,
-        reply, rlength, read_callback, 0, TIMEOUT_MSEC);
-again:
-    nbytes_received = 0;
-    libusb_submit_transfer(transfer);
-
-    int result = libusb_control_transfer(dev,
-        LIBUSB_REQUEST_TYPE_CLASS|LIBUSB_RECIPIENT_INTERFACE|LIBUSB_ENDPOINT_OUT,
-        0x09/*HID Set_Report*/, (2/*HID output*/ << 8) | 0,
-        HID_INTERFACE, (unsigned char*)data, length, TIMEOUT_MSEC);
-
-    if (result < 0) {
-        fprintf(stderr, "Error %d transmitting data via control transfer: %s\n",
-            result, libusb_strerror(result));
-        libusb_cancel_transfer(transfer);
-        return -1;
-    }
-
-    while (nbytes_received == 0) {
-        result = libusb_handle_events(ctx);
-        if (result < 0) {
-            /* Break out of this loop only on fatal error.*/
-            if (result != LIBUSB_ERROR_BUSY &&
-                result != LIBUSB_ERROR_TIMEOUT &&
-                result != LIBUSB_ERROR_OVERFLOW &&
-                result != LIBUSB_ERROR_INTERRUPTED) {
-                fprintf(stderr, "Error %d receiving data via interrupt transfer: %s\n",
-                    result, libusb_strerror(result));
-                return result;
-            }
-        }
-    }
-
-    if (nbytes_received == LIBUSB_ERROR_TIMEOUT) {
-        if (trace_flag > 0) {
-            fprintf(stderr, "No response from HID device!\n");
-        }
-        goto again;
-    }
-    return nbytes_received;
+    fprintf(stderr, "%s: Failed to %s %d bytes '%s'\n", __func__,
+            (type == BULK_WRITE_ENDPOINT) ? "write" : "read", length,
+            libusb_error_name(result));
+    return -1;
 }
 
 //
@@ -137,7 +72,6 @@ void hid_send_recv(const unsigned char *data, unsigned nbytes, unsigned char *rd
     unsigned char buf[64];
     unsigned char reply[64];
     unsigned k;
-    int reply_len;
 
     memset(buf, 0, sizeof(buf));
     if (nbytes > 0)
@@ -152,7 +86,15 @@ void hid_send_recv(const unsigned char *data, unsigned nbytes, unsigned char *rd
         }
         fprintf(stderr, "\n");
     }
-    reply_len = write_read(buf, sizeof(buf), reply, sizeof(reply));
+
+    // Send request to the device.
+    if (bulk_transfer(BULK_WRITE_ENDPOINT, buf, sizeof(buf)) < 0) {
+        fprintf(stderr, "Fatal write error!\n");
+        exit(-1);
+    }
+
+    // Get reply.
+    int reply_len = bulk_transfer(BULK_READ_ENDPOINT, reply, sizeof(reply));
     if (reply_len < 0) {
         exit(-1);
     }
@@ -217,10 +159,6 @@ void hid_close()
     if (!ctx)
         return;
 
-    if (transfer) {
-        libusb_free_transfer(transfer);
-        transfer = 0;
-    }
     libusb_release_interface(dev, HID_INTERFACE);
     libusb_close(dev);
     libusb_exit(ctx);
