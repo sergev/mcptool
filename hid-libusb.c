@@ -139,8 +139,8 @@ int hid_init(int vid, int pid)
         ctx = 0;
         return -1;
     }
-    if (libusb_kernel_driver_active(dev, 0)) {
-        libusb_detach_kernel_driver(dev, 0);
+    if (libusb_kernel_driver_active(dev, HID_INTERFACE)) {
+        libusb_detach_kernel_driver(dev, HID_INTERFACE);
     }
 
     error = libusb_claim_interface(dev, HID_INTERFACE);
