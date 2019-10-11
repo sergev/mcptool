@@ -29,6 +29,7 @@
 
 //
 // MCP2221 USB-I2C/UART Combo
+//
 #define MCP2221_VID 0x04d8
 #define MCP2221_PID 0x00dd
 
@@ -92,8 +93,24 @@ static void mcp_print_chip_settings(mcp_reply_chip_settings_t *settings)
     printf("USB Max Power: %dmA\n", settings->usb_max_power * 2);
     printf("USB Power Attributes: %#x\n", settings->usb_power_attrs);
 
-    if (settings->config1.clko_divider)
-        printf("Clock Output Divider: %d\n", settings->config1.clko_divider);
+    const char *freq = "??", *duty = "??";
+    switch (settings->config1.clko_div) {
+    case MCP_CLKO_DIV_375KHZ: freq = "375 kHz"; break;
+    case MCP_CLKO_DIV_750KHZ: freq = "750 kHz"; break;
+    case MCP_CLKO_DIV_1_5MHZ: freq = "1.5 MHz"; break;
+    case MCP_CLKO_DIV_3MHZ:   freq = "3 MHz"; break;
+    case MCP_CLKO_DIV_6MHZ:   freq = "6 MHz"; break;
+    case MCP_CLKO_DIV_12MHZ:  freq = "12 MHz"; break;
+    case MCP_CLKO_DIV_24MHZ:  freq = "24 MHz"; break;
+    case MCP_CLKO_DIV_OFF:    freq = "0 MHz"; break;
+    }
+    switch (settings->config1.clko_dc) {
+    case MCP_CLKO_DC_75:      duty = "75%"; break;
+    case MCP_CLKO_DC_50:      duty = "50%"; break;
+    case MCP_CLKO_DC_25:      duty = "25%"; break;
+    case MCP_CLKO_DC_0:       duty = "0%"; break;
+    }
+    printf("Clock Output: %s, duty cycle %s\n", freq, duty);
 
     if (trace_flag) {
         if (settings->config0.lock) {

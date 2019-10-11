@@ -144,8 +144,21 @@ typedef struct {
         unsigned cdcsernum : 1;     // Use USB serial number for CDC enumeration
     } config0;
     struct {
-        unsigned clko_divider : 5;  // Clock Output divider value
-        unsigned unused       : 3;  // Don’t care
+        unsigned clko_div  : 3;     // Clock Output divider
+#define MCP_CLKO_DIV_375KHZ 7       // 375 kHz clock output
+#define MCP_CLKO_DIV_750KHZ 6       // 750 kHz clock output
+#define MCP_CLKO_DIV_1_5MHZ 5       // 1.5 MHz clock output
+#define MCP_CLKO_DIV_3MHZ   4       // 3 MHz clock output
+#define MCP_CLKO_DIV_6MHZ   3       // 6 MHz clock output
+#define MCP_CLKO_DIV_12MHZ  2       // 12 MHz clock output (factory default)
+#define MCP_CLKO_DIV_24MHZ  1       // 24 MHz clock output
+#define MCP_CLKO_DIV_OFF    0       // Reserved
+        unsigned clko_dc   : 2;     // Clock Output duty cycle
+#define MCP_CLKO_DC_75      3       // Duty cycle 75%
+#define MCP_CLKO_DC_50      2       // Duty cycle 50% (factory default)
+#define MCP_CLKO_DC_25      1       // Duty cycle 25%
+#define MCP_CLKO_DC_0       0       // Duty cycle 0%
+        unsigned unused    : 3;     // Don’t care
     } config1;                      // Byte 5
     struct {
         unsigned dac_power_up : 5;  // Power-Up DAC value
