@@ -211,4 +211,69 @@ typedef struct {
                                     // 3 - DAC2 output
 } mcp_reply_gpio_settings_t;
 
+//
+// Get SRAM Data
+//
+typedef struct {
+    uint8_t  command_code;          // 0x61 = MCP_CMD_GETSRAM
+    uint8_t  status;                // 0x00 = Command completed successfully
+    uint8_t  nbytes_sram;           // Size of the SRAM Chip settings area
+    uint8_t  nbytes_gp;             // Size of the SRAM GP settings area
+    struct {
+        unsigned password  : 1;     // Chip security: Password-protected
+        unsigned lock      : 1;     // Chip security: Permanently locked
+        unsigned usbcfg    : 1;     // Initial value for USBCFG pin
+        unsigned sspnd     : 1;     // Initial value for SSPND pin
+        unsigned ledi2c    : 1;     // Initial value for LEDI2C pin
+        unsigned leduarttx : 1;     // Initial value for LEDUARTTX pin
+        unsigned leduartrx : 1;     // Initial value for LEDUARTRX pin
+        unsigned cdcsernum : 1;     // Use USB serial number for CDC enumeration
+    } config0;
+    struct {
+        unsigned clko_divider : 5;  // Clock Output divider value
+        unsigned unused       : 3;  // Don’t care
+    } config1;                      // Byte 5
+    struct {
+        unsigned dac_power_up : 5;  // Power-Up DAC value
+        unsigned dac_ref_en   : 1;  // Enable Vrm as DAC reference voltage
+        unsigned dac_ref_sel  : 2;  // DAC Reference voltage option
+    } config2;
+    struct {
+        unsigned unused0      : 1;  // Don’t care
+        unsigned unused1      : 1;  // Don’t care
+        unsigned adc_ref_en   : 1;  // Enable Vrm as ADC reference voltage
+        unsigned adc_ref_sel  : 2;  // ADC Reference voltage option
+        unsigned intr_pos     : 1;  // Interrupt detection on a positive edge
+        unsigned intr_neg     : 1;  // Interrupt detection on a negative edge
+        unsigned unused7      : 1;  // Don’t care
+    } config3;                      // Byte 7
+    uint16_t usb_vid;               // USB Vendor Identifier
+    uint16_t usb_pid;               // USB Product Identifier
+    uint8_t  usb_power_attrs;       // USB power attributes
+    uint8_t  usb_max_power;         // USB requested number of mA (divided by 2)
+
+    uint8_t  password[8];           // Current password
+
+    mcp_gpio_config_t gp0;          // GP0 Power-Up Settings
+    mcp_gpio_config_t gp1;          // GP1 Power-Up Settings
+    mcp_gpio_config_t gp2;          // GP2 Power-Up Settings
+    mcp_gpio_config_t gp3;          // GP3 Power-Up Settings
+} mcp_reply_sram_data_t;
+
+//
+// Get GPIO Values
+//
+typedef struct {
+    uint8_t  command_code;          // 0x51 = MCP_CMD_GETGPIO
+    uint8_t  status;                // 0x00 = Command completed successfully
+    uint8_t  gp0_pin;               // GP0 pin value
+    uint8_t  gp0_direction;         // GP0 direction value (0 output, 1 input)
+    uint8_t  gp1_pin;               // GP1 pin value
+    uint8_t  gp1_direction;         // GP1 direction value (0 output, 1 input)
+    uint8_t  gp2_pin;               // GP2 pin value
+    uint8_t  gp2_direction;         // GP2 direction value (0 output, 1 input)
+    uint8_t  gp3_pin;               // GP3 pin value
+    uint8_t  gp3_direction;         // GP3 direction value (0 output, 1 input)
+} mcp_reply_gpio_t;
+
 #pragma pack()

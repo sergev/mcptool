@@ -244,6 +244,18 @@ static void mcp_print_ascii(const char *title, const unsigned char *text, unsign
     printf("\n");
 }
 
+static void mcp_print_gpio(mcp_reply_gpio_t *gpio)
+{
+    printf("GP0 pin: %s %d\n", gpio->gp0_direction == 0 ? "Output" :
+        gpio->gp0_direction == 1 ? "Input" : "Unused", gpio->gp0_pin);
+    printf("GP1 pin: %s %d\n", gpio->gp1_direction == 0 ? "Output" :
+        gpio->gp1_direction == 1 ? "Input" : "Unused", gpio->gp1_pin);
+    printf("GP2 pin: %s %d\n", gpio->gp2_direction == 0 ? "Output" :
+        gpio->gp2_direction == 1 ? "Input" : "Unused", gpio->gp2_pin);
+    printf("GP3 pin: %s %d\n", gpio->gp3_direction == 0 ? "Output" :
+        gpio->gp3_direction == 1 ? "Input" : "Unused", gpio->gp3_pin);
+}
+
 //
 // Read information from MCP2221 chip.
 //
@@ -276,6 +288,7 @@ static void mcp_download()
         fprintf(stderr, "Bad reply from READFLASH CHIPSETTINGS request!\n");
         exit(-1);
     }
+    printf("--- Flash ---\n");
     mcp_print_chip_settings(&chip_settings);
 
     //
@@ -350,14 +363,41 @@ static void mcp_download()
     //
     // Get SRAM settings.
     //
-    unsigned char cmd_getsram[1] = { MCP_CMD_GETSRAM };
-    hid_send_recv(cmd_getsram, sizeof(cmd_getsram), reply, sizeof(reply));
+    unsigned char get_sram[1] = { MCP_CMD_GETSRAM };
+    mcp_reply_sram_data_t sram;
+    hid_send_recv(get_sram, sizeof(get_sram), &sram, sizeof(sram));
+    if (sram.command_code != get_sram[0] ||
+        sram.status != 0 ||
+        sram.nbytes_sram + sram.nbytes_gp + 4 != sizeof(sram))
+    {
+        fprintf(stderr, "Bad reply from GETSRAM request!\n");
+        exit(-1);
+    }
+    printf("--- SRAM ---\n");
+    mcp_print_chip_settings((mcp_reply_chip_settings_t*) &sram);
+    printf("Password: %02x-%02x-%02x-%02x-%02x-%02x-%02x-%02x\n",
+        sram.password[0], sram.password[1], sram.password[2], sram.password[3],
+        sram.password[4], sram.password[5], sram.password[6], sram.password[7]);
+
+    mcp_print_gpio_settings(&sram.gp0, 0);
+    mcp_print_gpio_settings(&sram.gp1, 1);
+    mcp_print_gpio_settings(&sram.gp2, 2);
+    mcp_print_gpio_settings(&sram.gp3, 3);
 
     //
     // Get GPIO values.
     //
-    unsigned char cmd_getgpio[1] = { MCP_CMD_GETGPIO };
-    hid_send_recv(cmd_getgpio, sizeof(cmd_getgpio), reply, sizeof(reply));
+    unsigned char get_gpio[1] = { MCP_CMD_GETGPIO };
+    mcp_reply_gpio_t gpio;
+    hid_send_recv(get_gpio, sizeof(get_gpio), &gpio, sizeof(gpio));
+    if (gpio.command_code != get_gpio[0] ||
+        gpio.status != 0)
+    {
+        fprintf(stderr, "Bad reply from GETGPIO request!\n");
+        exit(-1);
+    }
+    printf("--- GPIO ---\n");
+    mcp_print_gpio(&gpio);
 }
 
 int main(int argc, char **argv)
