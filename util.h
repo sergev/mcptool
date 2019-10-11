@@ -39,7 +39,7 @@ int trace_flag;
 int hid_init(int vid, int pid);
 const char *hid_identify(void);
 void hid_close(void);
-void hid_send_recv(const unsigned char *data, unsigned nbytes, unsigned char *rdata, unsigned rlength);
+void hid_send_recv(const unsigned char *data, unsigned nbytes, void *rdata, unsigned rlength);
 void hid_read_block(int bno, unsigned char *data, int nbytes);
 void hid_read_finish(void);
 void hid_write_block(int bno, unsigned char *data, int nbytes);

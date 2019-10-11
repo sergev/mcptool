@@ -67,7 +67,7 @@ static int bulk_transfer(uint8_t type, uint8_t *data, int length)
 // Store the reply into the rdata[] array.
 // Terminate in case of errors.
 //
-void hid_send_recv(const unsigned char *data, unsigned nbytes, unsigned char *rdata, unsigned rlength)
+void hid_send_recv(const unsigned char *data, unsigned nbytes, void *rdata, unsigned rlength)
 {
     unsigned char buf[64];
     unsigned char reply[64];
@@ -94,6 +94,7 @@ void hid_send_recv(const unsigned char *data, unsigned nbytes, unsigned char *rd
     }
 
     // Get reply.
+    memset(reply, 0, sizeof(reply));
     int reply_len = bulk_transfer(BULK_READ_ENDPOINT, reply, sizeof(reply));
     if (reply_len < 0) {
         exit(-1);

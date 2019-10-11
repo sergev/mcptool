@@ -38,7 +38,7 @@ static volatile int nbytes_received = 0;    // receive result
 // Store the reply into the rdata[] array.
 // Terminate in case of errors.
 //
-void hid_send_recv(const unsigned char *data, unsigned nbytes, unsigned char *rdata, unsigned rlength)
+void hid_send_recv(const unsigned char *data, unsigned nbytes, void *rdata, unsigned rlength)
 {
     unsigned char buf[64];
     unsigned k;

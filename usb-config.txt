@@ -1,0 +1,162 @@
+Bus 001 Device 098: ID 04d8:00dd Microchip Technology, Inc.
+Device Descriptor:
+  bLength                18
+  bDescriptorType         1
+  bcdUSB               2.00
+  bDeviceClass          239 Miscellaneous Device
+  bDeviceSubClass         2 ?
+  bDeviceProtocol         1 Interface Association
+  bMaxPacketSize0         8
+  idVendor           0x04d8 Microchip Technology, Inc.
+  idProduct          0x00dd
+  bcdDevice            1.00
+  iManufacturer           1 Microchip Technology Inc.
+  iProduct                2 MCP2221 USB-I2C/UART Combo
+  iSerial                 0
+  bNumConfigurations      1
+  Configuration Descriptor:
+    bLength                 9
+    bDescriptorType         2
+    wTotalLength          107
+    bNumInterfaces          3
+    bConfigurationValue     1
+    iConfiguration          0
+    bmAttributes         0x80
+      (Bus Powered)
+    MaxPower              100mA
+    Interface Association:
+      bLength                 8
+      bDescriptorType        11
+      bFirstInterface         0
+      bInterfaceCount         2
+      bFunctionClass          2 Communications
+      bFunctionSubClass       2 Abstract (modem)
+      bFunctionProtocol       1 AT-commands (v.25ter)
+      iFunction               0
+    Interface Descriptor:
+      bLength                 9
+      bDescriptorType         4
+      bInterfaceNumber        0
+      bAlternateSetting       0
+      bNumEndpoints           1
+      bInterfaceClass         2 Communications
+      bInterfaceSubClass      2 Abstract (modem)
+      bInterfaceProtocol      1 AT-commands (v.25ter)
+      iInterface              0
+      CDC Header:
+        bcdCDC               1.10
+      CDC ACM:
+        bmCapabilities       0x02
+          line coding and serial state
+      CDC Union:
+        bMasterInterface        0
+        bSlaveInterface         1
+      CDC Call Management:
+        bmCapabilities       0x00
+        bDataInterface          1
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x81  EP 1 IN
+        bmAttributes            3
+          Transfer Type            Interrupt
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0008  1x 8 bytes
+        bInterval               2
+    Interface Descriptor:
+      bLength                 9
+      bDescriptorType         4
+      bInterfaceNumber        1
+      bAlternateSetting       0
+      bNumEndpoints           2
+      bInterfaceClass        10 CDC Data
+      bInterfaceSubClass      0 Unused
+      bInterfaceProtocol      0
+      iInterface              0
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x02  EP 2 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0010  1x 16 bytes
+        bInterval               0
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x82  EP 2 IN
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0010  1x 16 bytes
+        bInterval               0
+    Interface Descriptor:
+      bLength                 9
+      bDescriptorType         4
+      bInterfaceNumber        2
+      bAlternateSetting       0
+      bNumEndpoints           2
+      bInterfaceClass         3 Human Interface Device
+      bInterfaceSubClass      0 No Subclass
+      bInterfaceProtocol      0 None
+      iInterface              0
+        HID Device Descriptor:
+          bLength                 9
+          bDescriptorType        33
+          bcdHID               1.11
+          bCountryCode            0 Not supported
+          bNumDescriptors         1
+          bDescriptorType        34 Report
+          wDescriptorLength      28
+          Report Descriptor: (length is 28)
+            Item(Global): Usage Page, data= [ 0x00 0xff ] 65280
+                            (null)
+            Item(Local ): Usage, data= [ 0x01 ] 1
+                            (null)
+            Item(Main  ): Collection, data= [ 0x01 ] 1
+                            Application
+            Item(Local ): Usage Minimum, data= [ 0x01 ] 1
+                            (null)
+            Item(Local ): Usage Maximum, data= [ 0x40 ] 64
+                            (null)
+            Item(Global): Logical Minimum, data= [ 0x01 ] 1
+            Item(Global): Logical Maximum, data= [ 0x40 ] 64
+            Item(Global): Report Size, data= [ 0x08 ] 8
+            Item(Global): Report Count, data= [ 0x40 ] 64
+            Item(Main  ): Input, data= [ 0x00 ] 0
+                            Data Array Absolute No_Wrap Linear
+                            Preferred_State No_Null_Position Non_Volatile Bitfield
+            Item(Local ): Usage Minimum, data= [ 0x01 ] 1
+                            (null)
+            Item(Local ): Usage Maximum, data= [ 0x40 ] 64
+                            (null)
+            Item(Main  ): Output, data= [ 0x00 ] 0
+                            Data Array Absolute No_Wrap Linear
+                            Preferred_State No_Null_Position Non_Volatile Bitfield
+            Item(Main  ): End Collection, data=none
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x83  EP 3 IN
+        bmAttributes            3
+          Transfer Type            Interrupt
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0040  1x 64 bytes
+        bInterval               1
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x03  EP 3 OUT
+        bmAttributes            3
+          Transfer Type            Interrupt
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0040  1x 64 bytes
+        bInterval               1
+Device Status:     0x0000
+  (Bus Powered)

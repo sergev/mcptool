@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include "mcp2221.h"
 #include "util.h"
 
 //
@@ -70,16 +71,37 @@ static void mcp_disconnect()
     hid_close();
 }
 
+static void mcp_print_status(mcp_reply_statusset_t *status)
+{
+    printf("Hardware Revision: %c%c\n", status->hardware_rev_major, status->hardware_rev_minor);
+    printf("Firmware Revision: %c.%c\n", status->firmware_rev_major, status->firmware_rev_minor);
+    //printf("SCL Input: %d\n", status->scl_input);
+    //printf("SDA Input: %d\n", status->sda_input);
+    //printf("Interrupt Edge: %d\n", status->intr_edge);
+    //printf("ADC Channel 0 Input: %d\n", status->adc_ch0);
+    //printf("ADC Channel 1 Input: %d\n", status->adc_ch1);
+    //printf("ADC Channel 2 Input: %d\n", status->adc_ch2);
+}
+
 //
 // Read information from MCP2221 chip.
 //
 static void mcp_download()
 {
     //TODO
-    unsigned char cmd_61[1] = { 0x61 };
+    unsigned char cmd_status[1]  = { MCP_CMD_STATUSSET };
+    unsigned char cmd_getsram[1] = { MCP_CMD_GETSRAM };
+    mcp_reply_statusset_t status;
     unsigned char reply[64];
 
-    hid_send_recv(cmd_61, sizeof(cmd_61), reply, sizeof(cmd_61));
+    hid_send_recv(cmd_status, sizeof(cmd_status), &status, sizeof(status));
+    if (status.command_code != MCP_CMD_STATUSSET || status.status != 0) {
+        fprintf(stderr, "Bad reply from STATUSSET request!\n");
+        exit(-1);
+    }
+    mcp_print_status(&status);
+
+    hid_send_recv(cmd_getsram, sizeof(cmd_getsram), reply, sizeof(reply));
 }
 
 int main(int argc, char **argv)
