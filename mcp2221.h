@@ -24,6 +24,9 @@
 #include <stdint.h>
 #pragma pack(1)
 
+//
+// First byte of HID command sent to the MCP2221 chip.
+//
 enum {
     MCP_CMD_STATUSSET               = 0x10,
     MCP_CMD_READFLASH               = 0xB0,
@@ -43,6 +46,18 @@ enum {
 };
 
 //
+// Second byte of MCP_CMD_READFLASH command.
+//
+enum {
+    MCP_FLASH_CHIPSETTINGS          = 0x00,
+    MCP_FLASH_GPIOSETTINGS          = 0x01,
+    MCP_FLASH_USBMANUFACTURER       = 0x02,
+    MCP_FLASH_USBPRODUCT            = 0x03,
+    MCP_FLASH_USBSERIAL             = 0x04,
+    MCP_FLASH_FACTORYSERIAL         = 0x05,
+};
+
+//
 // Status/Set Parameters
 //
 typedef struct {
@@ -51,7 +66,7 @@ typedef struct {
     uint8_t  cancel_i2c;            // 0x10 = cancel the current I2C transfer
     uint8_t  set_i2c_speed;         // 0x20 = set the I2C communication speed
     uint8_t  i2c_clock_divider;     // value of the I2C system clock divider
-} mcp_cmd_statusset_t;
+} mcp_cmd_status_t;
 
 typedef struct {
     uint8_t  command_code;          // 0x10 = MCP_CMD_STATUSSET
@@ -108,6 +123,92 @@ typedef struct {
     uint16_t adc_ch0;               // ADC channel 0 input value
     uint16_t adc_ch1;               // ADC channel 1 input value
     uint16_t adc_ch2;               // ADC channel 2 input value
-} mcp_reply_statusset_t;
+} mcp_reply_status_t;
+
+//
+// Read Flash Data: Chip Settings
+//
+typedef struct {
+    uint8_t  command_code;          // 0xb0 = MCP_CMD_READFLASH
+    uint8_t  status;                // 0x00 = Command completed successfully
+    uint8_t  nbytes;                // Length of this structure
+    uint8_t  unused3;               // Don’t care
+    struct {
+        unsigned password  : 1;     // Chip security: Password-protected
+        unsigned lock      : 1;     // Chip security: Permanently locked
+        unsigned usbcfg    : 1;     // Initial value for USBCFG pin
+        unsigned sspnd     : 1;     // Initial value for SSPND pin
+        unsigned ledi2c    : 1;     // Initial value for LEDI2C pin
+        unsigned leduarttx : 1;     // Initial value for LEDUARTTX pin
+        unsigned leduartrx : 1;     // Initial value for LEDUARTRX pin
+        unsigned cdcsernum : 1;     // Use USB serial number for CDC enumeration
+    } config0;
+    struct {
+        unsigned clko_divider : 5;  // Clock Output divider value
+        unsigned unused       : 3;  // Don’t care
+    } config1;                      // Byte 5
+    struct {
+        unsigned dac_power_up : 5;  // Power-Up DAC value
+        unsigned dac_ref_en   : 1;  // Enable Vrm as DAC reference voltage
+        unsigned dac_ref_sel  : 2;  // DAC Reference voltage option
+#define MCP_REF_4096    3           // Reference voltage is 4.096V
+#define MCP_REF_2048    2           // Reference voltage is 2.048V
+#define MCP_REF_1024    1           // Reference voltage is 1.024V
+#define MCP_REF_OFF     0           // Reference voltage is off
+    } config2;
+    struct {
+        unsigned unused0      : 1;  // Don’t care
+        unsigned unused1      : 1;  // Don’t care
+        unsigned adc_ref_en   : 1;  // Enable Vrm as ADC reference voltage
+        unsigned adc_ref_sel  : 2;  // ADC Reference voltage option
+        unsigned intr_pos     : 1;  // Interrupt detection on a positive edge
+        unsigned intr_neg     : 1;  // Interrupt detection on a negative edge
+        unsigned unused7      : 1;  // Don’t care
+    } config3;                      // Byte 7
+    uint16_t usb_vid;               // USB Vendor Identifier
+    uint16_t usb_pid;               // USB Product Identifier
+    uint8_t  usb_power_attrs;       // USB power attributes
+    uint8_t  usb_max_power;         // USB requested number of mA (divided by 2)
+} mcp_reply_chip_settings_t;
+
+//
+// GP Power-Up Settings
+//
+typedef struct {
+    unsigned function   : 3;        // GPx Designation, 0 = GPIO operation
+    unsigned dir_input  : 1;        // 0 = GPIO Output, 1 = Input mode
+    unsigned output_val : 1;        // Output value at power-up
+    unsigned unused : 3;            // Don’t care
+} mcp_gpio_config_t;
+
+//
+// Read Flash Data: GPIO Settings
+//
+typedef struct {
+    uint8_t  command_code;          // 0xb0 = MCP_CMD_READFLASH
+    uint8_t  status;                // 0x00 = Command completed successfully
+    uint8_t  nbytes;                // Length of this structure
+    uint8_t  unused3;               // Don’t care
+    mcp_gpio_config_t gp0;          // GP0 Power-Up Settings
+                                    // 0 - GPIO operation
+                                    // 1 - SSPND output
+                                    // 2 - LED UART RX output
+    mcp_gpio_config_t gp1;          // GP1 Power-Up Settings
+                                    // 0 - GPIO operation
+                                    // 1 - Clock output
+                                    // 2 - ADC1 input
+                                    // 3 - LED UART TX output
+                                    // 4 - Interrupt Detection
+    mcp_gpio_config_t gp2;          // GP2 Power-Up Settings
+                                    // 0 - GPIO operation
+                                    // 1 - USBCFG output
+                                    // 2 - ADC2 input
+                                    // 3 - DAC1 output
+    mcp_gpio_config_t gp3;          // GP3 Power-Up Settings
+                                    // 0 - GPIO operation
+                                    // 1 - LED I2C output
+                                    // 2 - ADC3 input
+                                    // 3 - DAC2 output
+} mcp_reply_gpio_settings_t;
 
 #pragma pack()

@@ -57,3 +57,7 @@ install:	mcptool
 		install -c -s mcptool /usr/local/bin/mcptool
 
 ###
+hid-libusb.o: hid-libusb.c util.h
+hid-macos.o: hid-macos.c util.h
+hid-windows.o: hid-windows.c util.h
+main.o: main.c mcp2221.h util.h
